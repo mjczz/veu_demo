@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>导出demo</title>
+    <script src="https://cdn.bootcss.com/axios/0.19.2/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+</head>
+<body>
+<div id="app">
+    <h1>{{m}}</h1>
+    <!--最开始span标签就是a标签，结果点击就是嵌套循环，所以新加一个span标签放在a标签里面解耦-->
+    <a id="download-data" ref="link" href="#">
+        <span class="download-btn" @click="downloadData()">
+            <i class="iconfont theme-color">导出</i>
+        </span>
+    </a>
+</div>
+</body>
+<script>
+    var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1aWQiOjk2LCJ1c2VybmFtZSI6ImN6eiIsImV4cGlyYXRpb25fYXQiOjE1ODc4NjYyMjN9.QecGsGgazlRFYt41LeqKJ8vKXCuQXDOGEbluBundHn8'
+    axios.defaults.headers.common["token"] = token;
+    var app= new Vue({
+        el:"#app",
+        data:{
+            m:"hello vue.js",
+        },
+        methods: {
+            downloadData: function () {
+                let url = 'http://zrr.test/admin_api/api_supplier_settlement/exportDetail'
+                axios.post(url, {
+                    "id": "7", // 参数
+                }).then((res) => {
+                    var downDict = res.data.data;
+                    this.fileName = downDict['filename']
+                    this.header = downDict['header']
+                    this.databody = downDict['body']
+                    // 上面就是获取数据格式如:file_name=aaa.csv  header=['姓名','年纪']  databody=[['艾弗森',41],['詹姆斯',35]]
+
+                    // 循环数据转入到csvContent
+                    var csvContent = 'data:text/csv;charset=utf-8,\ufeff';
+                    csvContent += this.header + '\n';
+
+                    this.databody.forEach((item) => {
+                        csvContent += item + '\n';
+                    });
+
+                    this.$refs.link.setAttribute('href', encodeURI(csvContent)); // 将csv数据绑定到a标签里
+                    this.$refs.link.setAttribute('download', this.fileName);
+                    var downloadClick = document.getElementById("download-data"); // 触发点击事件进行下载，如果没有这个就需要点击两次才能下载
+                    downloadClick.click();
+                })
+            }
+        }
+    });
+</script>
+</html>
+
